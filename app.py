@@ -189,10 +189,15 @@ def create_app():
 
     app.queue_task = queue_task
 
+    # WHY: Health check endpoint for Render/load balancer health monitoring
+    @app.route('/health')
+    def health():
+        return {'status': 'healthy', 'build': BUILD_NUMBER}, 200
+
     # Register special route for Next.js root asset paths first
     from routes.v1.media.feedback import create_root_next_routes
     create_root_next_routes(app)
-    
+
     # Use the discover_and_register_blueprints function to register all blueprints
     discover_and_register_blueprints(app)
 
