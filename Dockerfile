@@ -205,13 +205,7 @@ ENV PYTHONUNBUFFERED=1
 
 # WHY: Use $PORT env var for Render compatibility (defaults to 10000)
 # Gunicorn script reads PORT at runtime, not build time
-RUN echo '#!/bin/bash\n\
-gunicorn --bind 0.0.0.0:${PORT:-10000} \
-    --workers ${GUNICORN_WORKERS:-2} \
-    --timeout ${GUNICORN_TIMEOUT:-300} \
-    --worker-class sync \
-    --keep-alive 80 \
-    app:app' > /app/run_gunicorn.sh && \
+RUN printf '%s\n' '#!/bin/bash' 'exec gunicorn --bind 0.0.0.0:${PORT:-10000} --workers ${GUNICORN_WORKERS:-2} --timeout ${GUNICORN_TIMEOUT:-300} --worker-class sync --keep-alive 80 app:app' > /app/run_gunicorn.sh && \
     chmod +x /app/run_gunicorn.sh
 
 # Run the shell script
