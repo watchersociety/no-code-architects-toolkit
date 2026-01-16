@@ -1,0 +1,31 @@
+# Prometheus Toolkit - Render Blueprint
+# FFmpeg/Whisper video processing service
+#
+# Deploy with: render blueprint sync
+# Or manually in Render dashboard
+
+services:
+  - type: web
+    name: prometheus-toolkit
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    # WHY: Standard plan for 2GB RAM - FFmpeg needs memory for video processing
+    plan: standard
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: GCP_BUCKET_NAME
+        sync: false  # Set manually for storage bucket
+      - key: GCP_SA_CREDENTIALS
+        sync: false  # Set manually - JSON credentials
+      - key: GUNICORN_WORKERS
+        value: "4"
+      - key: GUNICORN_TIMEOUT
+        value: "600"
+      - key: PYTHONUNBUFFERED
+        value: "1"
