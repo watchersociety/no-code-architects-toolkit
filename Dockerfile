@@ -203,8 +203,10 @@ EXPOSE 8080
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 
+# WHY: Use $PORT env var for Render compatibility (defaults to 10000)
+# Gunicorn script reads PORT at runtime, not build time
 RUN echo '#!/bin/bash\n\
-gunicorn --bind 0.0.0.0:8080 \
+gunicorn --bind 0.0.0.0:${PORT:-10000} \
     --workers ${GUNICORN_WORKERS:-2} \
     --timeout ${GUNICORN_TIMEOUT:-300} \
     --worker-class sync \
