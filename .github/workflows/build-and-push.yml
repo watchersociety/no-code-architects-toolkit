@@ -1,5 +1,6 @@
 # Build Docker image and push to GitHub Container Registry
 # WHY: Bypass Render build limits by building with GitHub Actions (free)
+# The package inherits visibility from the public repository
 name: Build and Push Docker Image
 
 on:
@@ -17,6 +18,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # WHY: attestations permission needed for package to inherit repo visibility
+      attestations: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -42,6 +46,7 @@ jobs:
             type=sha,prefix=
 
       - name: Build and push Docker image
+        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -50,3 +55,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # WHY: Link the package to the repository for public visibility
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
