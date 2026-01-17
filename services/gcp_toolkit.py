@@ -35,25 +35,38 @@ def initialize_gcp_client():
     GCP_SA_CREDENTIALS = os.getenv('GCP_SA_CREDENTIALS')
 
     if not GCP_SA_CREDENTIALS:
-        #logger.warning("GCP credentials not found. Skipping GCS client initialization.")
+        logger.warning("GCP_SA_CREDENTIALS not found in environment. Skipping GCS client initialization.")
         return None  # Skip client initialization if credentials are missing
+
+    logger.info(f"GCP_SA_CREDENTIALS found, length: {len(GCP_SA_CREDENTIALS)}")
 
     # Define the required scopes for Google Cloud Storage
     GCS_SCOPES = ['https://www.googleapis.com/auth/devstorage.full_control']
 
     try:
         credentials_info = json.loads(GCP_SA_CREDENTIALS)
+        logger.info(f"Parsed GCS credentials, project_id: {credentials_info.get('project_id', 'unknown')}")
         gcs_credentials = service_account.Credentials.from_service_account_info(
             credentials_info,
             scopes=GCS_SCOPES
         )
-        return storage.Client(credentials=gcs_credentials)
+        client = storage.Client(credentials=gcs_credentials)
+        logger.info("GCS client initialized successfully")
+        return client
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse GCS credentials JSON: {e}")
+        logger.error(f"Credentials preview: {GCP_SA_CREDENTIALS[:100]}...")
+        return None
     except Exception as e:
-        logger.error(f"Failed to initialize GCS client: {e}")
+        logger.error(f"Failed to initialize GCS client: {type(e).__name__}: {e}")
         return None
 
 # Initialize the GCS client
 gcs_client = initialize_gcp_client()
+if gcs_client:
+    logger.info("GCS client ready for use")
+else:
+    logger.warning("GCS client is None - uploads will fail")
 
 def upload_to_gcs(file_path, bucket_name=GCP_BUCKET_NAME):
     if not gcs_client:
